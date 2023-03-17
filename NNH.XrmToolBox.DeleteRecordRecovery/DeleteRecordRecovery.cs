@@ -20,6 +20,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
     {
         private Settings mySettings;
 
+        private const string DATETIMEFORMAT = "yyyy-MM-dd HH:mm";
 
         /// <summary>
         /// The entity metadata list
@@ -27,11 +28,14 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
         private List<EntityMetadata> entityMetadataList;
 
         /// <summary>
-        /// The entity data list
+        /// Dynamics 365 entities' data list
         /// </summary>
         private List<Tuple<int, string, string, string>> entityList;
 
-        private List<KeyValuePair<Guid, string>> userList;
+        /// <summary>
+        /// Dynamics 365 users' data list
+        /// </summary>
+        private List<Tuple<Guid, bool, string>> displayUserList;
 
         public DeleteRecordRecovery()
         {
@@ -108,6 +112,10 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                 txtSearchEntity.Text = "Enter entity schema name or display name...";
                 txtSearchEntity.ForeColor = Color.DarkGray;
             }
+            else
+            {
+                FilterEntitiesDDL();
+            }
         }
 
         private void txtSearchUser_Enter(object sender, EventArgs e)
@@ -125,6 +133,10 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             {
                 txtSearchUser.Text = "Enter user name...";
                 txtSearchUser.ForeColor = Color.DarkGray;
+            }
+            else
+            {
+                FilterUsersDDL();
             }
         }
 
@@ -155,7 +167,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                     {
                         if (item.IsAuditEnabled.Value)
                         {
-                            entityList.Add(new Tuple<int, string, string, string>(item.ObjectTypeCode.Value, item.DisplayName.UserLocalizedLabel.Label,item.PrimaryNameAttribute, string.Concat(item.DisplayName.UserLocalizedLabel.Label, "　　　[", item.LogicalName, "]")));
+                            entityList.Add(new Tuple<int, string, string, string>(item.ObjectTypeCode.Value, item.DisplayName.UserLocalizedLabel.Label, item.PrimaryNameAttribute, string.Concat(item.DisplayName.UserLocalizedLabel.Label, "　　　[", item.LogicalName, "]")));
                             entityMetadataList.Add(item);
                         }
                     }
@@ -184,17 +196,26 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                 Message = "Loading users...",
                 Work = (w, ev) =>
                 {
-                    userList = new List<KeyValuePair<Guid, string>>();
+                    displayUserList = new List<Tuple<Guid, bool, string>>();
 
                     FetchExpression query = new FetchExpression(FetchXMLResources.GetAllUsersXML);
                     var queryResult = Service.RetrieveMultiple(query);
-                    userList.Add(new KeyValuePair<Guid, string>(Guid.Empty, "All Users"));
+                    displayUserList.Add(new Tuple<Guid, bool, string>(Guid.Empty, false, "!All Users"));
                     foreach (var item in queryResult.Entities)
                     {
-                        userList.Add(new KeyValuePair<Guid, string>(item.Id, item.Attributes["fullname"] != null ? item.Attributes["fullname"].ToString() : string.Empty));
+                        var uName = item.Attributes["fullname"] != null ? item.Attributes["fullname"].ToString() : string.Empty;
+                        var isDisabled = item.Attributes["isdisabled"] != null ? (bool)item.Attributes["isdisabled"] : false;
+                        displayUserList.Add(new Tuple<Guid, bool, string>(item.Id, isDisabled, uName));
                     }
-
-                    ev.Result = userList;
+                    if (chkDisabledUsers.Checked)
+                    {
+                        ev.Result = displayUserList.OrderBy(x => (x.Item3)).ToList();
+                    }
+                    else
+                    {
+                        ev.Result = displayUserList.Where(p => p.Item2 == false).OrderBy(x => (x.Item3)).ToList();
+                    }
+                    
                 },
                 ProgressChanged = ev =>
                 {
@@ -203,9 +224,9 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                 },
                 PostWorkCallBack = ev =>
                 {
-                    cbUser.DataSource = (List<KeyValuePair<Guid, string>>)ev.Result;
-                    cbUser.DisplayMember = "Value";
-                    cbUser.ValueMember = "Key";
+                    cbUser.DataSource = ev.Result;
+                    cbUser.DisplayMember = "Item3";
+                    cbUser.ValueMember = "Item1";
                 },
                 AsyncArgument = null,
                 IsCancelable = true,
@@ -224,53 +245,81 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
 
         private void chkDisabledUsers_CheckedChanged(object sender, EventArgs e)
         {
-
+            if (displayUserList == null || !displayUserList.Any())
+            {
+                return;
+            }
+            if (chkDisabledUsers.Checked)
+            {
+                cbUser.DataSource = displayUserList.OrderBy(x => (x.Item3)).ToList();
+            }
+            else
+            {
+                cbUser.DataSource = displayUserList.Where(p => p.Item2 == false).OrderBy(x => (x.Item3)).ToList(); 
+            }
+            cbUser.DisplayMember = "Item3";
+            cbUser.ValueMember = "Item1";
         }
 
         private void txtSearchEntity_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                if (entityList == null || entityList.Count == 0) 
-                    return;
-
-                string filterText = this.txtSearchEntity.Text.Trim().ToLower();
-                if (filterText.Length > 0)
-                {
-                    //ddlEntities.DataSou
-                    var filterItems = entityList.Where(p => p.Item4.Contains(filterText));
-                    cbEntity.DataSource = filterItems.OrderBy(x => (x.Item2)).ToList();
-                }
-                else
-                {
-                    cbEntity.DataSource = entityList.OrderBy(x => (x.Item2)).ToList();
-                }
-                cbEntity.DisplayMember = "Item4";
-                cbEntity.ValueMember = "Item1";
+                FilterEntitiesDDL();
             }
+        }
+
+        /// <summary>
+        /// Filter entities combobox by the search text box
+        /// </summary>
+        private void FilterEntitiesDDL()
+        {
+            if (entityList == null || entityList.Count == 0)
+                return;
+            string filterText = txtSearchEntity.Text.Trim().ToLower();
+            if (filterText.Length > 0)
+            {
+                //ddlEntities.DataSou
+                var filterItems = entityList.Where(p => p.Item4.Contains(filterText));
+                cbEntity.DataSource = filterItems.OrderBy(x => (x.Item2)).ToList();
+            }
+            else
+            {
+                cbEntity.DataSource = entityList.OrderBy(x => (x.Item2)).ToList();
+            }
+            cbEntity.DisplayMember = "Item4";
+            cbEntity.ValueMember = "Item1";
         }
 
         private void txtSearchUser_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                if (userList == null || userList.Count == 0)
-                    return;
-
-                string filterText = this.txtSearchUser.Text.Trim().ToLower();
-                if (filterText.Length > 0)
-                {
-                    //ddlEntities.DataSou
-                    var filterItems = userList.Where(p => p.Value.Contains(filterText));
-                    cbUser.DataSource = filterItems.OrderBy(x => (x.Value)).ToList();
-                }
-                else
-                {
-                    cbUser.DataSource = userList.OrderBy(x => (x.Value)).ToList();
-                }
-                cbUser.DisplayMember = "Value";
-                cbUser.ValueMember = "Key";
+                FilterUsersDDL();
             }
+        }
+
+        /// <summary>
+        /// Filter users combobox by the search text box
+        /// </summary>
+        private void FilterUsersDDL()
+        {
+            if (displayUserList == null || displayUserList.Count == 0)
+                return;
+
+            string filterText = this.txtSearchUser.Text.Trim().ToLower();
+            if (filterText.Length > 0)
+            {
+                //ddlEntities.DataSou
+                var filterItems = displayUserList.Where(p => p.Item3.Contains(filterText));
+                cbUser.DataSource = filterItems.OrderBy(x => (x.Item3)).ToList();
+            }
+            else
+            {
+                cbUser.DataSource = displayUserList.OrderBy(x => (x.Item3)).ToList();
+            }
+            cbUser.DisplayMember = "Item3";
+            cbUser.ValueMember = "Item1";
         }
 
         private void tsbShowData_Click(object sender, EventArgs e)
@@ -331,7 +380,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                                 Metadata = metadata
                             };
 
-                            if(auditItem.DeletionDate.Kind == DateTimeKind.Utc)
+                            if (auditItem.DeletionDate.Kind == DateTimeKind.Utc)
                             {
                                 auditItem.DeletionDate = TimeZoneInfo.ConvertTime(auditItem.DeletionDate, TimeZoneInfo.Utc, currentTimeZone);
                             }
@@ -453,6 +502,23 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             }
 
             return result;
+        }
+
+        private void cbTimezone_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var currentTimeZone = (TimeZoneInfo)cbTimezone.SelectedItem;
+            var timeZoneText = currentTimeZone.BaseUtcOffset.Hours > 0 ? "+" : "-";
+            timeZoneText += currentTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
+
+
+            var dateFromUtcText = ((DateTime)dtpFrom.Value).ToString(DATETIMEFORMAT) + " " + timeZoneText;
+            var dateFromUtc = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.Parse(dateFromUtcText), "UTC");
+            dtpFrom.Value = TimeZoneInfo.ConvertTimeFromUtc(dateFromUtc, currentTimeZone);
+
+
+            var dateToUtcText = ((DateTime)dtpTo.Value).ToString(DATETIMEFORMAT) + " " + timeZoneText;
+            var dateToUtc = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.Parse(dateToUtcText), "UTC");
+            dtpTo.Value = TimeZoneInfo.ConvertTimeFromUtc(dateToUtc, currentTimeZone);
         }
     }
 }
