@@ -4,11 +4,13 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
+using NNH.XrmToolBox.DeleteRecordRecovery.Helpers;
 using NNH.XrmToolBox.DeleteRecordRecovery.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -18,6 +20,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
 {
     public partial class DeleteRecordRecovery : PluginControlBase
     {
+        #region Variables
         private Settings mySettings;
 
         private const string DATETIMEFORMAT = "yyyy-MM-dd HH:mm";
@@ -36,6 +39,13 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
         /// Dynamics 365 users' data list
         /// </summary>
         private List<Tuple<Guid, bool, string>> displayUserList;
+
+        /// <summary>
+        /// Deleted audit history data
+        /// </summary>
+        private List<AuditHistories> deletedData;
+        #endregion
+
 
         public DeleteRecordRecovery()
         {
@@ -215,7 +225,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                     {
                         ev.Result = displayUserList.Where(p => p.Item2 == false).OrderBy(x => (x.Item3)).ToList();
                     }
-                    
+
                 },
                 ProgressChanged = ev =>
                 {
@@ -235,13 +245,6 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             });
         }
 
-        /// <summary>
-        /// Check the CRM connection
-        /// </summary>
-        private void WhoAmI()
-        {
-            Service.Execute(new WhoAmIRequest());
-        }
 
         private void chkDisabledUsers_CheckedChanged(object sender, EventArgs e)
         {
@@ -255,7 +258,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             }
             else
             {
-                cbUser.DataSource = displayUserList.Where(p => p.Item2 == false).OrderBy(x => (x.Item3)).ToList(); 
+                cbUser.DataSource = displayUserList.Where(p => p.Item2 == false).OrderBy(x => (x.Item3)).ToList();
             }
             cbUser.DisplayMember = "Item3";
             cbUser.ValueMember = "Item1";
@@ -324,7 +327,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
 
         private void tsbShowData_Click(object sender, EventArgs e)
         {
-            if (IsValid())
+            if (IsValidWhenShowData())
             {
                 Guid selectedUser = (Guid)cbUser.SelectedValue;
                 var selectedEntityValue = cbEntity.SelectedValue;
@@ -338,7 +341,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                     Message = "Loading deleted records...",
                     Work = (w, ev) =>
                     {
-                        List<AuditHistories> data = new List<AuditHistories>();
+                        deletedData = new List<AuditHistories>();
                         FetchExpression query = null;
                         string auditFetchXml;
                         if (selectedUser == Guid.Empty)
@@ -390,15 +393,15 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                                 auditItem.Name = attributeDetail.OldValue[selectedEntity.Item3].ToString();
                             }
 
-                            data.Add(auditItem);
+                            deletedData.Add(auditItem);
                         }
 
-                        ev.Result = data.OrderByDescending(x => x.DeletionDate).ToList();
+                        ev.Result = deletedData.OrderByDescending(x => x.DeletionDate).ToList();
                     },
                     ProgressChanged = ev =>
                     {
                         // If progress has to be notified to user, use the following method:
-                        SetWorkingMessage("Loading entities with auditing enabled...");
+                        SetWorkingMessage("Loading deleted records...");
                     },
                     PostWorkCallBack = ev =>
                     {
@@ -413,36 +416,6 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             }
         }
 
-        /// <summary>
-        /// Returns true if ... is valid.
-        /// </summary>
-        /// <returns>
-        ///   <c>true</c> if this instance is valid; otherwise, <c>false</c>.
-        /// </returns>
-        private bool IsValid()
-        {
-            bool result = true;
-
-            if (cbEntity.SelectedIndex == -1)
-            {
-                result = false;
-                MessageBox.Show("Select entity from the list");
-            }
-
-            if (cbUser.SelectedIndex == -1)
-            {
-                result = false;
-                MessageBox.Show("Select user from the list");
-            }
-
-            if (dtpFrom.Value > dtpTo.Value)
-            {
-                result = false;
-                MessageBox.Show("From date should be less than to date");
-            }
-
-            return result;
-        }
 
         private void dgvDeletedData_CellClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -467,14 +440,14 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
 
         private void ShowData(AttributeAuditDetail auditDetail, EntityMetadata metadata)
         {
-            List<DeletedField> result = new List<DeletedField>();
+            List<DeletedFields> result = new List<DeletedFields>();
 
             foreach (var item in auditDetail.OldValue.Attributes)
             {
                 var metadataAttrib = metadata.Attributes.Where(x => (x.SchemaName.ToLower() == item.Key.ToLower())).ToList();
                 if (metadataAttrib.Count > 0)
                 {
-                    result.Add(new DeletedField()
+                    result.Add(new DeletedFields()
                     {
                         FieldName = metadataAttrib[0].DisplayName.UserLocalizedLabel.Label,
                         Value = GetFormattedValue(item.Value)
@@ -520,5 +493,127 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             var dateToUtc = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.Parse(dateToUtcText), "UTC");
             dtpTo.Value = TimeZoneInfo.ConvertTimeFromUtc(dateToUtc, currentTimeZone);
         }
+
+        private void tsbExport_Click(object sender, EventArgs e)
+        {
+            if (IsValidWhenExportData())
+            {
+                ExcelDocument excelGenerator = null;
+
+                WorkAsync(new WorkAsyncInfo
+                {
+                    Message = "Exporting deleted records...",
+                    Work = (w, ev) =>
+                    {
+                        excelGenerator = new ExcelDocument();
+                        excelGenerator.AuditHistoryList = deletedData;
+                        excelGenerator.Worker = w;
+                        excelGenerator.Generate(Service);
+                    },
+                    ProgressChanged = ev =>
+                    {
+                        // If progress has to be notified to user, use the following method:
+                        SetWorkingMessage("Generating data...");
+                    },
+                    PostWorkCallBack = evt =>
+                    {
+                        if (evt.Error != null)
+                        {
+                            MessageBox.Show(this, "An error occured while generating document: " + evt.Error.ToString(), "Error",
+                                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        else
+                        {
+                            SaveFileDialog saveExcelFileDialog = new SaveFileDialog();
+
+                            // Set the file filter and default file name
+                            saveExcelFileDialog.Filter = "Excel Workbook (*.xlsx)|*.xlsx|Excel 97-2003 Workbook (*.xls)|*.xls";
+                            saveExcelFileDialog.FileName = "";
+                            // Show the dialog to the user and get the result
+                            DialogResult result = saveExcelFileDialog.ShowDialog();
+
+                            // Check if the user selected a file and clicked the "OK" button
+                            if (result == DialogResult.OK)
+                            {
+                                // Get the selected file path
+                                string filePath = saveExcelFileDialog.FileName;
+
+                                // Use the file path to save the Excel file with the chosen file name
+                                excelGenerator.SaveDocument(filePath);
+
+                                // Open file after saving
+                                if (DialogResult.Yes == MessageBox.Show(this, "Do you want to open generated excel file?", "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                                {
+                                    Process.Start(filePath);
+                                }
+                            }
+                        }
+
+                    },
+                    AsyncArgument = null,
+                    IsCancelable = true,
+                    MessageWidth = 340,
+                    MessageHeight = 150
+                });
+            }
+        }
+
+        #region Validation Methods
+
+        /// <summary>
+        /// Check the input data is valid when click show data button
+        /// </summary>
+        /// <returns>true if the input is valid; otherwise,</returns>
+        private bool IsValidWhenShowData()
+        {
+            bool result = true;
+
+            if (cbEntity.SelectedIndex == -1)
+            {
+                result = false;
+                MessageBox.Show("Select entity from the list");
+            }
+
+            if (cbUser.SelectedIndex == -1)
+            {
+                result = false;
+                MessageBox.Show("Select user from the list");
+            }
+
+            if (dtpFrom.Value > dtpTo.Value)
+            {
+                result = false;
+                MessageBox.Show("From date should be less than to date");
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Check the input data is valid when click export data button
+        /// </summary>
+        /// <returns></returns>
+        private bool IsValidWhenExportData()
+        {
+
+            if (deletedData == null || !deletedData.Any())
+            {
+                MessageBox.Show("No data available for export. Please click the 「Show deleted data」 button to get the data first.");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Check the CRM connection
+        /// </summary>
+        private void WhoAmI()
+        {
+            Service.Execute(new WhoAmIRequest());
+        }
+
+        #endregion
+
     }
 }

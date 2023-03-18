@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NNH.XrmToolBox.DeleteRecordRecovery.Models
 {
-    internal class DeletedField
+    internal class DeletedFields
     {
         /// <summary>
         /// Gets or sets the name of the field.
