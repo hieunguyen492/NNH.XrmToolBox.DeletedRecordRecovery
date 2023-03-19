@@ -73,6 +73,7 @@
             this.tsbLoadEntityAndUser = new System.Windows.Forms.ToolStripButton();
             this.tsbShowData = new System.Windows.Forms.ToolStripButton();
             this.tsbExport = new System.Windows.Forms.ToolStripButton();
+            this.tsbRestore = new System.Windows.Forms.ToolStripButton();
             this.toolStripMenu.SuspendLayout();
             this.gbSearch.SuspendLayout();
             this.gbSetting.SuspendLayout();
@@ -96,7 +97,8 @@
             this.tsbLoadEntityAndUser,
             this.tssSeparator1,
             this.tsbShowData,
-            this.tsbExport});
+            this.tsbExport,
+            this.tsbRestore});
             this.toolStripMenu.Location = new System.Drawing.Point(0, 0);
             this.toolStripMenu.Name = "toolStripMenu";
             this.toolStripMenu.Size = new System.Drawing.Size(1261, 25);
@@ -526,6 +528,16 @@
             this.tsbExport.Text = "Export deleted data";
             this.tsbExport.Click += new System.EventHandler(this.tsbExport_Click);
             // 
+            // tsbRestore
+            // 
+            this.tsbRestore.Image = global::NNH.XrmToolBox.DeleteRecordRecovery.Properties.Resources.icons8_forward_arrow_16;
+            this.tsbRestore.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.tsbRestore.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbRestore.Name = "tsbRestore";
+            this.tsbRestore.Size = new System.Drawing.Size(108, 22);
+            this.tsbRestore.Text = "Restore records";
+            this.tsbRestore.Click += new System.EventHandler(this.tsbRestore_Click);
+            // 
             // DeleteRecordRecovery
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -604,5 +616,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn fieldNameDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn valueDataGridViewTextBoxColumn;
         private System.Windows.Forms.ToolStripButton tsbExport;
+        private System.Windows.Forms.ToolStripButton tsbRestore;
     }
 }

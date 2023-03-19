@@ -419,6 +419,10 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
 
         private void dgvDeletedData_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
             if (e.ColumnIndex == 1)
             {
                 AuditHistories audit = (AuditHistories)dgvDeletedData.Rows[e.RowIndex].DataBoundItem;
@@ -558,6 +562,94 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             }
         }
 
+
+
+        private void tsbRestore_Click(object sender, EventArgs e)
+        {
+            if (IsValidWhenRestore())
+            {
+                DialogResult diag = MessageBox.Show("Are you sure would like to restore these deleted records?", "Confirmation", MessageBoxButtons.YesNo);
+                bool recordsSelected = false;
+                string errorMessage = string.Empty;
+                var keepGuid = chkKeepGuid.Checked;
+                var reAssignWhenDisabled = chkReAssign.Checked;
+                if (diag.ToString().ToUpperInvariant() == "YES")
+                {
+                    WorkAsync(new WorkAsyncInfo
+                    {
+                        Message = "Restoring data...",
+                        Work = (w, ev) =>
+                        {
+                            try
+                            {
+                                for (int i = 0; i < dgvDeletedData.Rows.Count; i++)
+                                {
+                                    DataGridViewRow row = dgvDeletedData.Rows[i];
+                                    DataGridViewCheckBoxCell checkBoxCell = (DataGridViewCheckBoxCell)row.Cells[0];
+                                    if (checkBoxCell.Value != null && (bool)checkBoxCell.Value)
+                                    {
+                                        recordsSelected = true;
+                                        AuditHistories audit = (AuditHistories)row.DataBoundItem;
+                                        Entity entity = audit.AuditDetail.OldValue;
+
+                                        if (keepGuid && audit.RecordId != Guid.Empty)
+                                        {
+                                            entity.Id = audit.RecordId;
+                                        }
+
+                                        if (reAssignWhenDisabled && entity.Attributes.Contains("ownerid"))
+                                        {
+                                            Guid ownerGuid = entity.GetAttributeValue<EntityReference>("ownerid").Id;
+                                            Entity ownerUser = Service.Retrieve("systemuser", ownerGuid, new ColumnSet("fullname", "isdisabled"));
+                                            if (ownerUser != null)
+                                            {
+                                                bool isUserDisabled = ownerUser.GetAttributeValue<bool>("isdisabled");
+                                                if (isUserDisabled)
+                                                {
+                                                    entity.Attributes.Remove("ownerid");
+                                                }
+                                            }
+                                        }
+
+                                        entity.Attributes.Remove("statecode");
+                                        entity.Attributes.Remove("statuscode");
+                                        Service.Create(entity);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                errorMessage = ex.Message;
+                            }
+                        },
+                        ProgressChanged = ev =>
+                        {
+                        // If progress has to be notified to user, use the following method:
+                        SetWorkingMessage("Restoring data...");
+                        },
+                        PostWorkCallBack = ev =>
+                        {
+                            if (string.IsNullOrWhiteSpace(errorMessage))
+                            {
+                                if (recordsSelected)
+                                    MessageBox.Show("Restored the deleted records successfully!");
+                                else
+                                    MessageBox.Show("Please select records to restore!");
+                            }
+                            else
+                            {
+                                MessageBox.Show(errorMessage);
+                            }
+                        },
+                        AsyncArgument = null,
+                        IsCancelable = true,
+                        MessageWidth = 340,
+                        MessageHeight = 150
+                    });
+                }
+            }
+        }
+
         #region Validation Methods
 
         /// <summary>
@@ -606,6 +698,22 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
         }
 
         /// <summary>
+        /// Check the input data is valid when click restore data button
+        /// </summary>
+        /// <returns></returns>
+        private bool IsValidWhenRestore()
+        {
+
+            if (deletedData == null || !deletedData.Any())
+            {
+                MessageBox.Show("No deleted data available for restore.");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Check the CRM connection
         /// </summary>
         private void WhoAmI()
@@ -614,6 +722,5 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
         }
 
         #endregion
-
     }
 }
