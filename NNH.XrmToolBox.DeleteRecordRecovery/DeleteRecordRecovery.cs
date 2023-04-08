@@ -4,6 +4,7 @@ using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Query;
+using NNH.XrmToolBox.DeleteRecordRecovery.Controls;
 using NNH.XrmToolBox.DeleteRecordRecovery.Helpers;
 using NNH.XrmToolBox.DeleteRecordRecovery.Models;
 using System;
@@ -78,6 +79,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                 LogInfo("Settings found and loaded");
             }
             this.ActiveControl = gbSearch;
+            setCheckboxOnGridHeader();
         }
 
         /// <summary>
@@ -415,6 +417,29 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             }
         }
 
+        private void setCheckboxOnGridHeader()
+        {
+            DataGridViewCheckBoxColumn col1 = new DataGridViewCheckBoxColumn();
+            var checkheader = new CheckBoxHeaderCell();
+            checkheader.OnCheckBoxHeaderClick += checkheader_OnCheckBoxHeaderClick;
+            col1.HeaderCell = checkheader;
+            col1.Width = 40;
+            col1.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            dgvDeletedData.Columns.Insert(0, col1);
+        }
+
+        private void checkheader_OnCheckBoxHeaderClick(CheckBoxHeaderCellEventArgs e)
+        {
+            if (dgvDeletedData.Rows.Count < 1)
+                return;
+            dgvDeletedData.BeginEdit(true);
+            foreach (DataGridViewRow item in dgvDeletedData.Rows)
+            {
+                item.Cells[0].Value = e.IsChecked;
+            }
+            dgvDeletedData.EndEdit();
+
+        }
 
         private void dgvDeletedData_CellClick(object sender, DataGridViewCellEventArgs e)
         {

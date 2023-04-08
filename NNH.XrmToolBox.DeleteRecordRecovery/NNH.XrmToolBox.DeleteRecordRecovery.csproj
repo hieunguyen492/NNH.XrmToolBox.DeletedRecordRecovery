@@ -225,6 +225,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants\Constants.cs" />
+    <Compile Include="Controls\CheckBoxHeaderCell.cs" />
+    <Compile Include="Controls\CheckBoxHeaderCellEventArgs.cs" />
     <Compile Include="FetchXMLResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

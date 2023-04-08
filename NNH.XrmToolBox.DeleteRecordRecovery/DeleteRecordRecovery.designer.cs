@@ -55,12 +55,6 @@
             this.cbEntity = new System.Windows.Forms.ComboBox();
             this.txtSearchEntity = new System.Windows.Forms.TextBox();
             this.dgvDeletedData = new System.Windows.Forms.DataGridView();
-            this.Select = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.nameDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.entityDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.deletionDateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.deletedByDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.recordIdDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.deletedRecordBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.dgvDetailData = new System.Windows.Forms.DataGridView();
             this.fieldNameDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -75,6 +69,11 @@
             this.deletionDateDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.deletedByDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.auditDetailDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.nameDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.entityDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.deletionDateDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.deletedByDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.recordIdDataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolStripMenu.SuspendLayout();
             this.gbSearch.SuspendLayout();
             this.gbSetting.SuspendLayout();
@@ -346,7 +345,6 @@
             this.dgvDeletedData.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.dgvDeletedData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDeletedData.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Select,
             this.nameDataGridViewTextBoxColumn1,
             this.entityDataGridViewTextBoxColumn1,
             this.deletionDateDataGridViewTextBoxColumn1,
@@ -361,61 +359,6 @@
             this.dgvDeletedData.Size = new System.Drawing.Size(547, 437);
             this.dgvDeletedData.TabIndex = 6;
             this.dgvDeletedData.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDeletedData_CellClick);
-            // 
-            // Select
-            // 
-            this.Select.FillWeight = 30F;
-            this.Select.HeaderText = "Select";
-            this.Select.MinimumWidth = 20;
-            this.Select.Name = "Select";
-            this.Select.ReadOnly = true;
-            // 
-            // nameDataGridViewTextBoxColumn1
-            // 
-            this.nameDataGridViewTextBoxColumn1.DataPropertyName = "Name";
-            this.nameDataGridViewTextBoxColumn1.FillWeight = 133.3157F;
-            this.nameDataGridViewTextBoxColumn1.HeaderText = "Record Name";
-            this.nameDataGridViewTextBoxColumn1.MinimumWidth = 80;
-            this.nameDataGridViewTextBoxColumn1.Name = "nameDataGridViewTextBoxColumn1";
-            this.nameDataGridViewTextBoxColumn1.ReadOnly = true;
-            this.nameDataGridViewTextBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.nameDataGridViewTextBoxColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // entityDataGridViewTextBoxColumn1
-            // 
-            this.entityDataGridViewTextBoxColumn1.DataPropertyName = "Entity";
-            this.entityDataGridViewTextBoxColumn1.HeaderText = "Entity";
-            this.entityDataGridViewTextBoxColumn1.MinimumWidth = 50;
-            this.entityDataGridViewTextBoxColumn1.Name = "entityDataGridViewTextBoxColumn1";
-            this.entityDataGridViewTextBoxColumn1.ReadOnly = true;
-            // 
-            // deletionDateDataGridViewTextBoxColumn1
-            // 
-            this.deletionDateDataGridViewTextBoxColumn1.DataPropertyName = "DeletionDate";
-            dataGridViewCellStyle1.Format = "yyyy/MM/dd HH:mm:ss";
-            dataGridViewCellStyle1.NullValue = null;
-            this.deletionDateDataGridViewTextBoxColumn1.DefaultCellStyle = dataGridViewCellStyle1;
-            this.deletionDateDataGridViewTextBoxColumn1.HeaderText = "Deleted Date";
-            this.deletionDateDataGridViewTextBoxColumn1.MinimumWidth = 50;
-            this.deletionDateDataGridViewTextBoxColumn1.Name = "deletionDateDataGridViewTextBoxColumn1";
-            this.deletionDateDataGridViewTextBoxColumn1.ReadOnly = true;
-            // 
-            // deletedByDataGridViewTextBoxColumn1
-            // 
-            this.deletedByDataGridViewTextBoxColumn1.DataPropertyName = "DeletedBy";
-            this.deletedByDataGridViewTextBoxColumn1.HeaderText = "Deleted By";
-            this.deletedByDataGridViewTextBoxColumn1.MinimumWidth = 50;
-            this.deletedByDataGridViewTextBoxColumn1.Name = "deletedByDataGridViewTextBoxColumn1";
-            this.deletedByDataGridViewTextBoxColumn1.ReadOnly = true;
-            // 
-            // recordIdDataGridViewTextBoxColumn1
-            // 
-            this.recordIdDataGridViewTextBoxColumn1.DataPropertyName = "RecordId";
-            this.recordIdDataGridViewTextBoxColumn1.FillWeight = 150F;
-            this.recordIdDataGridViewTextBoxColumn1.HeaderText = "Record Id";
-            this.recordIdDataGridViewTextBoxColumn1.MinimumWidth = 80;
-            this.recordIdDataGridViewTextBoxColumn1.Name = "recordIdDataGridViewTextBoxColumn1";
-            this.recordIdDataGridViewTextBoxColumn1.ReadOnly = true;
             // 
             // deletedRecordBindingSource
             // 
@@ -539,6 +482,53 @@
             this.auditDetailDataGridViewTextBoxColumn.Name = "auditDetailDataGridViewTextBoxColumn";
             this.auditDetailDataGridViewTextBoxColumn.Width = 22;
             // 
+            // nameDataGridViewTextBoxColumn1
+            // 
+            this.nameDataGridViewTextBoxColumn1.DataPropertyName = "Name";
+            this.nameDataGridViewTextBoxColumn1.FillWeight = 133.3157F;
+            this.nameDataGridViewTextBoxColumn1.HeaderText = "Record Name";
+            this.nameDataGridViewTextBoxColumn1.MinimumWidth = 80;
+            this.nameDataGridViewTextBoxColumn1.Name = "nameDataGridViewTextBoxColumn1";
+            this.nameDataGridViewTextBoxColumn1.ReadOnly = true;
+            this.nameDataGridViewTextBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.nameDataGridViewTextBoxColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // entityDataGridViewTextBoxColumn1
+            // 
+            this.entityDataGridViewTextBoxColumn1.DataPropertyName = "Entity";
+            this.entityDataGridViewTextBoxColumn1.HeaderText = "Entity";
+            this.entityDataGridViewTextBoxColumn1.MinimumWidth = 50;
+            this.entityDataGridViewTextBoxColumn1.Name = "entityDataGridViewTextBoxColumn1";
+            this.entityDataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
+            // deletionDateDataGridViewTextBoxColumn1
+            // 
+            this.deletionDateDataGridViewTextBoxColumn1.DataPropertyName = "DeletionDate";
+            dataGridViewCellStyle1.Format = "yyyy/MM/dd HH:mm:ss";
+            dataGridViewCellStyle1.NullValue = null;
+            this.deletionDateDataGridViewTextBoxColumn1.DefaultCellStyle = dataGridViewCellStyle1;
+            this.deletionDateDataGridViewTextBoxColumn1.HeaderText = "Deleted Date";
+            this.deletionDateDataGridViewTextBoxColumn1.MinimumWidth = 50;
+            this.deletionDateDataGridViewTextBoxColumn1.Name = "deletionDateDataGridViewTextBoxColumn1";
+            this.deletionDateDataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
+            // deletedByDataGridViewTextBoxColumn1
+            // 
+            this.deletedByDataGridViewTextBoxColumn1.DataPropertyName = "DeletedBy";
+            this.deletedByDataGridViewTextBoxColumn1.HeaderText = "Deleted By";
+            this.deletedByDataGridViewTextBoxColumn1.MinimumWidth = 50;
+            this.deletedByDataGridViewTextBoxColumn1.Name = "deletedByDataGridViewTextBoxColumn1";
+            this.deletedByDataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
+            // recordIdDataGridViewTextBoxColumn1
+            // 
+            this.recordIdDataGridViewTextBoxColumn1.DataPropertyName = "RecordId";
+            this.recordIdDataGridViewTextBoxColumn1.FillWeight = 150F;
+            this.recordIdDataGridViewTextBoxColumn1.HeaderText = "Record Id";
+            this.recordIdDataGridViewTextBoxColumn1.MinimumWidth = 80;
+            this.recordIdDataGridViewTextBoxColumn1.Name = "recordIdDataGridViewTextBoxColumn1";
+            this.recordIdDataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
             // DeleteRecordRecovery
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -609,15 +599,14 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn auditDetailDataGridViewTextBoxColumn;
         private System.Windows.Forms.BindingSource detailBindingSource;
         private System.Windows.Forms.DataGridView dgvDeletedData;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn Select;
+        private System.Windows.Forms.DataGridViewTextBoxColumn fieldNameDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn valueDataGridViewTextBoxColumn;
+        private System.Windows.Forms.ToolStripButton tsbExport;
+        private System.Windows.Forms.ToolStripButton tsbRestore;
         private System.Windows.Forms.DataGridViewLinkColumn nameDataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn entityDataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn deletionDateDataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn deletedByDataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn recordIdDataGridViewTextBoxColumn1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn fieldNameDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn valueDataGridViewTextBoxColumn;
-        private System.Windows.Forms.ToolStripButton tsbExport;
-        private System.Windows.Forms.ToolStripButton tsbRestore;
     }
 }
