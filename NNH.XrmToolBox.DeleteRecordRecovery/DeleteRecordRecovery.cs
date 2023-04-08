@@ -165,7 +165,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
 
             WorkAsync(new WorkAsyncInfo
             {
-                Message = "Loading entities with auditing enabled...",
+                Message = "Loading entities and users...",
                 Work = (w, ev) =>
                 {
                     RetrieveAllEntitiesRequest metaDataRequest = new RetrieveAllEntitiesRequest();
@@ -204,7 +204,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
 
             WorkAsync(new WorkAsyncInfo
             {
-                Message = "Loading users...",
+                Message = "Loading entities and users...",
                 Work = (w, ev) =>
                 {
                     displayUserList = new List<Tuple<Guid, bool, string>>();
