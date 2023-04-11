@@ -284,13 +284,14 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             if (filterText.Length > 0)
             {
                 //ddlEntities.DataSou
-                var filterItems = entityList.Where(p => p.Item4.Contains(filterText));
+                var filterItems = entityList.Where(p => p.Item4.ToLower().Contains(filterText));
                 cbEntity.DataSource = filterItems.OrderBy(x => (x.Item2)).ToList();
             }
             else
             {
                 cbEntity.DataSource = entityList.OrderBy(x => (x.Item2)).ToList();
             }
+
             cbEntity.DisplayMember = "Item4";
             cbEntity.ValueMember = "Item1";
         }
@@ -314,8 +315,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
             string filterText = this.txtSearchUser.Text.Trim().ToLower();
             if (filterText.Length > 0)
             {
-                //ddlEntities.DataSou
-                var filterItems = displayUserList.Where(p => p.Item3.Contains(filterText));
+                var filterItems = displayUserList.Where(p => p.Item3.ToLower().Contains(filterText));
                 cbUser.DataSource = filterItems.OrderBy(x => (x.Item3)).ToList();
             }
             else
@@ -336,6 +336,7 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                 var currentTimeZone = (TimeZoneInfo)cbTimezone.SelectedItem;
                 var dateFrom = TimeZoneInfo.ConvertTimeToUtc(dtpFrom.Value);
                 var dateTo = TimeZoneInfo.ConvertTimeToUtc(dtpTo.Value);
+                lblSelectedNum.Text = string.Empty;
 
                 WorkAsync(new WorkAsyncInfo
                 {
@@ -371,6 +372,11 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                             RetrieveAuditDetailsRequest auditDetailRequest = new RetrieveAuditDetailsRequest();
                             auditDetailRequest.AuditId = item.Id;
                             RetrieveAuditDetailsResponse response = (RetrieveAuditDetailsResponse)Service.Execute(auditDetailRequest);
+                            var detailType = response.AuditDetail.GetType();
+                            if(detailType != typeof(AttributeAuditDetail))
+                            {
+                                continue;
+                            }
                             AttributeAuditDetail attributeDetail = (AttributeAuditDetail)response.AuditDetail;
                             EntityMetadata metadata = entityMetadataList.FirstOrDefault(x => (x.ObjectTypeCode == selectedEntity.Item1));
                             AuditHistories auditItem = new AuditHistories()
@@ -438,6 +444,12 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                 item.Cells[0].Value = e.IsChecked;
             }
             dgvDeletedData.EndEdit();
+            var selectedRowNum = 0;
+            if (e.IsChecked)
+            {
+                selectedRowNum = dgvDeletedData.Rows.Count;
+            }
+            lblSelectedNum.Text = $"{selectedRowNum} Rows Selected.";
 
         }
 
@@ -463,6 +475,15 @@ namespace NNH.XrmToolBox.DeleteRecordRecovery
                 {
                     checkBoxCell.Value = !((bool)checkBoxCell.Value);
                 }
+                int checkedRowCount = 0;
+                foreach (DataGridViewRow row in dgvDeletedData.Rows)
+                {
+                    if (row.Cells[0].Value != null && (bool)row.Cells[0].Value == true)
+                    {
+                        checkedRowCount++;
+                    }
+                }
+                lblSelectedNum.Text = $"{checkedRowCount} Rows Selected.";
             }
         }
 
